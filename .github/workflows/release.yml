@@ -81,6 +81,15 @@ jobs:
         with:
           path: dist
 
+      - name: Generate per-artifact checksums (SHA-256)
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' f; do
+            echo "Generating checksum for $f"
+            sha256sum "$f" | awk '{print $1}' > "$f.sha256"
+          done < <(find dist -type f ! -name '*.sha256' -print0)
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
