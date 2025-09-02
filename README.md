@@ -3,6 +3,9 @@ min2phase-ui
 
 An egui-powered desktop UI for exploring the min2phase Rubik's cube solver.
 
+<img width="905" height="905" alt="image" src="https://github.com/user-attachments/assets/fb4b27da-110f-4186-b5c0-8788b5c673a4" />
+
+
 What this is
 ------------
 - A small Rust app that uses the min2phase library and exposes common operations via UI.
