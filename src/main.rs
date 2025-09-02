@@ -94,47 +94,53 @@ impl AppState {
     }
 
     fn draw_face(&mut self, ui: &mut egui::Ui, face_index: usize) {
-        let base = face_index * 9;
-        for r in 0..3 {
-            ui.horizontal(|ui| {
-                for c in 0..3 {
-                    let idx = base + r * 3 + c;
-                    let color = self.palette[self.facelets[idx] as usize];
-                    let label = if r == 1 && c == 1 {
-                        match face_index {
-                            0 => "U",
-                            1 => "R",
-                            2 => "F",
-                            3 => "D",
-                            4 => "L",
-                            _ => "B",
+        ui.scope(|ui| {
+            ui.spacing_mut().item_spacing = egui::vec2(4.0, 4.0);
+            let base = face_index * 9;
+            for r in 0..3 {
+                ui.horizontal(|ui| {
+                    for c in 0..3 {
+                        let idx = base + r * 3 + c;
+                        let color = self.palette[self.facelets[idx] as usize];
+                        let label = if r == 1 && c == 1 {
+                            match face_index {
+                                0 => "U",
+                                1 => "R",
+                                2 => "F",
+                                3 => "D",
+                                4 => "L",
+                                _ => "B",
+                            }
+                        } else {
+                            ""
+                        };
+                        if ui
+                            .add(
+                                egui::Button::new(label)
+                                    .fill(color)
+                                    .min_size(egui::vec2(28.0, 28.0)),
+                            )
+                            .clicked()
+                        {
+                            self.facelets[idx] = self.current_color as u8;
                         }
-                    } else {
-                        ""
-                    };
-                    if ui
-                        .add(
-                            egui::Button::new(label)
-                                .fill(color)
-                                .min_size(egui::vec2(28.0, 28.0)),
-                        )
-                        .clicked()
-                    {
-                        self.facelets[idx] = self.current_color as u8;
                     }
-                }
-            });
-        }
+                });
+            }
+        });
     }
 
     fn draw_empty_face(&mut self, ui: &mut egui::Ui) {
-        for _ in 0..3 {
-            ui.horizontal(|ui| {
-                for _ in 0..3 {
-                    ui.allocate_space(egui::vec2(28.0, 28.0));
-                }
-            });
-        }
+        ui.scope(|ui| {
+            ui.spacing_mut().item_spacing = egui::vec2(4.0, 4.0);
+            for _ in 0..3 {
+                ui.horizontal(|ui| {
+                    for _ in 0..3 {
+                        ui.allocate_space(egui::vec2(28.0, 28.0));
+                    }
+                });
+            }
+        });
     }
 }
 
@@ -221,15 +227,15 @@ impl eframe::App for AppState {
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
-                ui.add_space(8.0);
+                ui.add_space(4.0);
                 ui.vertical(|ui| {
                     self.draw_face(ui, 0);
                 });
-                ui.add_space(8.0);
+                ui.add_space(4.0);
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
-                ui.add_space(8.0);
+                ui.add_space(4.0);
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
@@ -240,15 +246,15 @@ impl eframe::App for AppState {
                 ui.vertical(|ui| {
                     self.draw_face(ui, 4);
                 });
-                ui.add_space(8.0);
+                ui.add_space(4.0);
                 ui.vertical(|ui| {
                     self.draw_face(ui, 2);
                 });
-                ui.add_space(8.0);
+                ui.add_space(4.0);
                 ui.vertical(|ui| {
                     self.draw_face(ui, 1);
                 });
-                ui.add_space(8.0);
+                ui.add_space(4.0);
                 ui.vertical(|ui| {
                     self.draw_face(ui, 5);
                 });
@@ -259,15 +265,15 @@ impl eframe::App for AppState {
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
-                ui.add_space(8.0);
+                ui.add_space(4.0);
                 ui.vertical(|ui| {
                     self.draw_face(ui, 3);
                 });
-                ui.add_space(8.0);
+                ui.add_space(4.0);
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
-                ui.add_space(8.0);
+                ui.add_space(4.0);
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
