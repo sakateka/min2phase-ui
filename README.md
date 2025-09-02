@@ -3,7 +3,7 @@ min2phase-ui
 
 An egui-powered desktop UI for exploring the min2phase Rubik's cube solver.
 
-<img width="904" height="905" alt="image" src="https://github.com/user-attachments/assets/fbc7a068-c157-4589-8b66-ddead7dd942c" />
+<img width="450" height="450" alt="image" src="https://github.com/user-attachments/assets/fbc7a068-c157-4589-8b66-ddead7dd942c" />
 
 
 What this is
