@@ -50,5 +50,5 @@ UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB
 
 Acknowledgements
 ----------------
-- [min2phase_rust](https://github.com/cs0x7f/min2phase_rust)
+- min2phase_rust https://github.com/cs0x7f/min2phase_rust
 - Rust `egui`/`eframe`
