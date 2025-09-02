@@ -155,7 +155,7 @@ impl eframe::App for AppState {
                     self.log = format!("Cube: {}\n{}", face, self.log);
                     let sol = solve(&face, self.max_depth);
                     let moves = sol.split_whitespace().count();
-                    self.moves_text = format!("{}", sol);
+                    self.moves_text = sol.to_string();
                     self.log = format!("{} ({}f)\n{}", sol, moves, self.log);
                 }
                 if ui.button("Random Cube").clicked() {
@@ -185,12 +185,12 @@ impl eframe::App for AppState {
                         self.write_facelet_string()
                     };
                     let mv = self.moves_text.trim().to_string();
-                    if !mv.is_empty() {
-                        if let Some(new_face) = apply_moves(&base, &mv) {
-                            self.apply_facelet_string(&new_face);
-                            self.facelet_text = new_face.clone();
-                            self.log = format!("Apply: {}\n{}", mv, self.log);
-                        }
+                    if !mv.is_empty()
+                        && let Some(new_face) = apply_moves(&base, &mv)
+                    {
+                        self.apply_facelet_string(&new_face);
+                        self.facelet_text = new_face.clone();
+                        self.log = format!("Apply: {}\n{}", mv, self.log);
                     }
                 }
                 if ui.button("Reset").clicked() {
@@ -214,22 +214,22 @@ impl eframe::App for AppState {
                     ui.add(egui::DragValue::new(&mut self.max_depth).range(1..=24));
                 });
             });
-            ui.add_space(8.0);
+            ui.add_space(16.0);
 
             ui.horizontal(|ui| {
                 ui.add_space(16.0);
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
-                ui.add_space(16.0);
+                ui.add_space(8.0);
                 ui.vertical(|ui| {
                     self.draw_face(ui, 0);
                 });
-                ui.add_space(16.0);
+                ui.add_space(8.0);
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
-                ui.add_space(16.0);
+                ui.add_space(8.0);
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
@@ -240,15 +240,15 @@ impl eframe::App for AppState {
                 ui.vertical(|ui| {
                     self.draw_face(ui, 4);
                 });
-                ui.add_space(16.0);
+                ui.add_space(8.0);
                 ui.vertical(|ui| {
                     self.draw_face(ui, 2);
                 });
-                ui.add_space(16.0);
+                ui.add_space(8.0);
                 ui.vertical(|ui| {
                     self.draw_face(ui, 1);
                 });
-                ui.add_space(16.0);
+                ui.add_space(8.0);
                 ui.vertical(|ui| {
                     self.draw_face(ui, 5);
                 });
@@ -259,15 +259,15 @@ impl eframe::App for AppState {
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
-                ui.add_space(16.0);
+                ui.add_space(8.0);
                 ui.vertical(|ui| {
                     self.draw_face(ui, 3);
                 });
-                ui.add_space(16.0);
+                ui.add_space(8.0);
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
-                ui.add_space(16.0);
+                ui.add_space(8.0);
                 ui.vertical(|ui| {
                     self.draw_empty_face(ui);
                 });
