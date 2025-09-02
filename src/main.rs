@@ -3,14 +3,102 @@
 use eframe::egui;
 use min2phase::*;
 
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Face {
+    U,
+    R,
+    F,
+    D,
+    L,
+    B,
+}
+
+impl Face {
+    fn from_index(i: u8) -> Self {
+        match i {
+            0 => Face::U,
+            1 => Face::R,
+            2 => Face::F,
+            3 => Face::D,
+            4 => Face::L,
+            _ => Face::B,
+        }
+    }
+
+    fn to_index(self) -> u8 {
+        match self {
+            Face::U => 0,
+            Face::R => 1,
+            Face::F => 2,
+            Face::D => 3,
+            Face::L => 4,
+            Face::B => 5,
+        }
+    }
+
+    fn to_char(self) -> char {
+        match self {
+            Face::U => 'U',
+            Face::R => 'R',
+            Face::F => 'F',
+            Face::D => 'D',
+            Face::L => 'L',
+            Face::B => 'B',
+        }
+    }
+
+    fn from_char(ch: char) -> Option<Self> {
+        match ch {
+            'U' => Some(Face::U),
+            'R' => Some(Face::R),
+            'F' => Some(Face::F),
+            'D' => Some(Face::D),
+            'L' => Some(Face::L),
+            'B' => Some(Face::B),
+            _ => None,
+        }
+    }
+}
+
+struct Facelet(pub [Face; 54]);
+
+impl Facelet {
+    fn new_solved() -> Self {
+        let mut arr = [Face::U; 54];
+        for i in 0..54 {
+            arr[i] = Face::from_index((i / 9) as u8);
+        }
+        Facelet(arr)
+    }
+
+    fn to_facelet_string(&self) -> String {
+        let mut buf = String::with_capacity(54);
+        for i in 0..54 {
+            buf.push(self.0[i].to_char());
+        }
+        buf
+    }
+
+    fn apply_from_str(&mut self, s: &str) {
+        if s.len() < 54 {
+            return;
+        }
+        for (i, ch) in s.chars().take(54).enumerate() {
+            if let Some(face) = Face::from_char(ch) {
+                self.0[i] = face;
+            }
+        }
+    }
+}
+
 struct AppState {
     palette: [egui::Color32; 6],
     current_color: usize,
-    facelets: [u8; 54],
+    facelets: Facelet,
     max_depth: u8,
     facelet_text: String,
     moves_text: String,
-    prev_facelets: [u8; 54],
     log: String,
 }
 
@@ -26,54 +114,19 @@ impl Default for AppState {
                 egui::Color32::from_rgb(0, 90, 200),
             ],
             current_color: 0,
-            facelets: [0; 54],
+            facelets: Facelet::new_solved(),
             max_depth: 21,
             facelet_text: String::new(),
             moves_text: String::new(),
-            prev_facelets: [0; 54],
+
             log: String::new(),
         };
-        for i in 0..54 {
-            s.facelets[i] = (i / 9) as u8;
-        }
-        s.prev_facelets = s.facelets;
-        s.facelet_text = s.write_facelet_string();
+        s.facelet_text = s.facelets.to_facelet_string();
         s
     }
 }
 
 impl AppState {
-    fn write_facelet_string(&self) -> String {
-        let mut buf = String::with_capacity(54);
-        for i in 0..54 {
-            buf.push(match self.facelets[i] {
-                0 => 'U',
-                1 => 'R',
-                2 => 'F',
-                3 => 'D',
-                4 => 'L',
-                _ => 'B',
-            });
-        }
-        buf
-    }
-
-    fn apply_facelet_string(&mut self, s: &str) {
-        if s.len() < 54 {
-            return;
-        }
-        for (i, ch) in s.chars().take(54).enumerate() {
-            self.facelets[i] = match ch {
-                'U' => 0,
-                'R' => 1,
-                'F' => 2,
-                'D' => 3,
-                'L' => 4,
-                _ => 5,
-            };
-        }
-    }
-
     fn draw_palette(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             for (i, col) in self.palette.iter().enumerate() {
@@ -101,19 +154,16 @@ impl AppState {
                 ui.horizontal(|ui| {
                     for c in 0..3 {
                         let idx = base + r * 3 + c;
-                        let color = self.palette[self.facelets[idx] as usize];
-                        let label = if r == 1 && c == 1 {
-                            match face_index {
-                                0 => "U",
-                                1 => "R",
-                                2 => "F",
-                                3 => "D",
-                                4 => "L",
-                                _ => "B",
-                            }
+                        let color = self.palette[self.facelets.0[idx].to_index() as usize];
+                        let label_str = if r == 1 && c == 1 {
+                            Face::from_index(face_index as u8).to_char().to_string()
                         } else {
-                            ""
+                            String::new()
                         };
+                        let label = egui::RichText::new(label_str)
+                            .strong()
+                            .size(18.0)
+                            .color(egui::Color32::BLACK);
                         if ui
                             .add(
                                 egui::Button::new(label)
@@ -122,7 +172,7 @@ impl AppState {
                             )
                             .clicked()
                         {
-                            self.facelets[idx] = self.current_color as u8;
+                            self.facelets.0[idx] = Face::from_index(self.current_color as u8);
                         }
                     }
                 });
@@ -147,16 +197,39 @@ impl AppState {
 impl eframe::App for AppState {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
+            ui.separator();
             ui.label("Facelet (54 chars):");
-            ui.add(egui::TextEdit::singleline(&mut self.facelet_text).desired_width(f32::INFINITY));
+            ui.scope(|ui| {
+                ui.visuals_mut().override_text_color = Some(egui::Color32::WHITE);
+                ui.add(
+                    egui::TextEdit::singleline(&mut self.facelet_text).desired_width(f32::INFINITY),
+                );
+            });
             ui.label("Rotations / Moves:");
-            ui.add(egui::TextEdit::singleline(&mut self.moves_text).desired_width(f32::INFINITY));
+            ui.scope(|ui| {
+                ui.visuals_mut().override_text_color = Some(egui::Color32::WHITE);
+                ui.add(
+                    egui::TextEdit::singleline(&mut self.moves_text).desired_width(f32::INFINITY),
+                );
+            });
+            ui.separator();
             ui.horizontal(|ui| {
-                if ui.button("Solve Cube").clicked() {
+                let solve_label = egui::RichText::new("Solve Cube")
+                    .strong()
+                    .color(egui::Color32::BLACK)
+                    .size(18.0);
+                if ui
+                    .add(
+                        egui::Button::new(solve_label)
+                            .fill(egui::Color32::from_rgb(0x4C, 0xAF, 0x50))
+                            .min_size(egui::vec2(120.0, 34.0)),
+                    )
+                    .clicked()
+                {
                     let face = if self.facelet_text.trim().len() >= 54 {
                         self.facelet_text.trim().to_string()
                     } else {
-                        self.write_facelet_string()
+                        self.facelets.to_facelet_string()
                     };
                     self.log = format!("Cube: {}\n{}", face, self.log);
                     let sol = solve(&face, self.max_depth);
@@ -164,45 +237,86 @@ impl eframe::App for AppState {
                     self.moves_text = sol.to_string();
                     self.log = format!("{} ({}f)\n{}", sol, moves, self.log);
                 }
-                if ui.button("Random Cube").clicked() {
-                    self.prev_facelets = self.facelets;
+                let random_label = egui::RichText::new("Random Cube")
+                    .strong()
+                    .color(egui::Color32::BLACK)
+                    .size(18.0);
+                if ui
+                    .add(
+                        egui::Button::new(random_label)
+                            .fill(egui::Color32::from_rgb(0xFF, 0x98, 0x00))
+                            .min_size(egui::vec2(120.0, 34.0)),
+                    )
+                    .clicked()
+                {
                     let s = random_cube();
-                    self.apply_facelet_string(&s);
+                    self.facelets.apply_from_str(&s);
                     self.facelet_text = s.clone();
                     self.moves_text.clear();
                     self.log = format!("{}\n{}", s, self.log);
                 }
-                if ui.button("Scramble").clicked() {
-                    self.prev_facelets = self.facelets;
+                let scramble_label = egui::RichText::new("Scramble")
+                    .strong()
+                    .color(egui::Color32::BLACK)
+                    .size(18.0);
+                if ui
+                    .add(
+                        egui::Button::new(scramble_label)
+                            .fill(egui::Color32::from_rgb(0x21, 0x96, 0xF3))
+                            .min_size(egui::vec2(120.0, 34.0)),
+                    )
+                    .clicked()
+                {
                     let scr = random_moves(25);
-                    let cur = self.write_facelet_string();
+                    let cur = self.facelets.to_facelet_string();
                     if let Some(new_face) = apply_moves(&cur, &scr) {
-                        self.apply_facelet_string(&new_face);
+                        self.facelets.apply_from_str(&new_face);
                         self.facelet_text = new_face.clone();
                         self.moves_text = scr.clone();
                         self.log = format!("Scramble: {}\n{}", scr, self.log);
                     }
                 }
-                if ui.button("Apply Moves").clicked() {
-                    self.prev_facelets = self.facelets;
+                let apply_label = egui::RichText::new("Apply Moves")
+                    .strong()
+                    .color(egui::Color32::BLACK)
+                    .size(18.0);
+                if ui
+                    .add(
+                        egui::Button::new(apply_label)
+                            .fill(egui::Color32::from_rgb(0xFF, 0xFF, 0xFF))
+                            .min_size(egui::vec2(120.0, 34.0)),
+                    )
+                    .clicked()
+                {
                     let base = if self.facelet_text.trim().len() >= 54 {
                         self.facelet_text.trim().to_string()
                     } else {
-                        self.write_facelet_string()
+                        self.facelets.to_facelet_string()
                     };
                     let mv = self.moves_text.trim().to_string();
                     if !mv.is_empty()
                         && let Some(new_face) = apply_moves(&base, &mv)
                     {
-                        self.apply_facelet_string(&new_face);
+                        self.facelets.apply_from_str(&new_face);
                         self.facelet_text = new_face.clone();
                         self.log = format!("Apply: {}\n{}", mv, self.log);
                     }
                 }
-                if ui.button("Reset").clicked() {
-                    self.facelets = self.prev_facelets;
-                    self.facelet_text = self.write_facelet_string();
-                    self.moves_text.clear();
+                let reset_label = egui::RichText::new("Reset")
+                    .strong()
+                    .color(egui::Color32::BLACK)
+                    .size(18.0);
+                if ui
+                    .add(
+                        egui::Button::new(reset_label)
+                            .fill(egui::Color32::from_rgb(0xF4, 0x43, 0x36))
+                            .min_size(egui::vec2(120.0, 34.0)),
+                    )
+                    .clicked()
+                {
+                    self.facelets = Facelet::new_solved();
+                    self.facelet_text = self.facelets.to_facelet_string();
+                    self.log = format!("Reset\n{}", self.log);
                 }
             });
 
@@ -285,7 +399,7 @@ impl eframe::App for AppState {
             egui::ScrollArea::vertical()
                 .max_height(160.0)
                 .show(ui, |ui| {
-                    ui.code(&self.log);
+                    ui.label(egui::RichText::new(&self.log).monospace());
                 });
         });
     }
